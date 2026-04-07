@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="zh-TW" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="RF Calc">
+<title>RF Converter</title>
+<style>
+:root,[data-theme="light"]{
+  --bg:#f2f2f7;--surf:#ffffff;--surf2:#e5e5ea;--surf3:#d1d1d6;
+  --border:rgba(60,60,67,0.13);--divider:rgba(60,60,67,0.1);
+  --text:#000000;--muted:#6e6e73;--faint:#aeaeb2;
+  --accent:#007aff;--accent2:#34aadc;--accent-bg:rgba(0,122,255,0.1);
+  --primary:#01696f;--primary-bg:rgba(1,105,111,0.1);
+  --red:#ff3b30;--green:#34c759;--orange:#ff9500;
+  --shadow:0 1px 3px rgba(0,0,0,0.08),0 4px 16px rgba(0,0,0,0.06);
+  --r:12px;--r-sm:8px;--r-lg:16px;--r-pill:999px;
+}
+[data-theme="dark"]{
+  --bg:#000000;--surf:#1c1c1e;--surf2:#2c2c2e;--surf3:#3a3a3c;
+  --border:rgba(255,255,255,0.1);--divider:rgba(255,255,255,0.07);
+  --text:#ffffff;--muted:#8e8e93;--faint:#48484a;
+  --accent:#0a84ff;--accent2:#5ac8fa;--accent-bg:rgba(10,132,255,0.15);
+  --primary:#4f98a3;--primary-bg:rgba(79,152,163,0.15);
+  --red:#ff453a;--green:#30d158;--orange:#ff9f0a;
+  --shadow:0 1px 3px rgba(0,0,0,0.3),0 4px 16px rgba(0,0,0,0.25);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html{-webkit-text-size-adjust:none;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",sans-serif;
+  background:var(--bg);color:var(--text);min-height:100dvh;
+  display:flex;flex-direction:column;overflow-x:hidden;
+}
+/* ── HEADER ── */
+.header{
+  position:sticky;top:0;z-index:100;
+  background:rgba(28,28,30,0.85);
+  border-bottom:1px solid var(--border);
+  padding:env(safe-area-inset-top,0px) 0 0;
+  backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
+}
+[data-theme="light"] .header{background:rgba(242,242,247,0.85);}
+.header-inner{display:flex;align-items:center;justify-content:space-between;padding:12px 20px;}
+.header-logo-wrap{display:flex;align-items:center;gap:10px;}
+.header-title{font-size:17px;font-weight:700;letter-spacing:-0.3px;}
+.header-title span{color:var(--primary);}
+.icon-btn{
+  width:34px;height:34px;border-radius:var(--r-pill);
+  background:var(--surf2);border:none;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  color:var(--muted);transition:background 0.15s;
+}
+.icon-btn:active{background:var(--surf3);}
+/* ── MAIN ── */
+.main{flex:1;overflow-y:auto;padding:14px 16px 96px;-webkit-overflow-scrolling:touch;}
+/* ── PAGE PANELS ── */
+.page{display:none;animation:fadeUp 0.22s ease;}
+.page.active{display:block;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+/* ── CARD ── */
+.card{background:var(--surf);border-radius:var(--r-lg);margin-bottom:14px;box-shadow:var(--shadow);overflow:hidden;}
+.card-header{
+  padding:13px 16px 10px;
+  border-bottom:1px solid var(--divider);
+  display:flex;align-items:center;gap:7px;
+}
+.card-header-icon{font-size:15px;}
+.card-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:var(--muted);}
+/* ── INPUT ROWS ── */
+.input-row{display:flex;align-items:center;gap:10px;padding:10px 16px;}
+.input-row+.input-row{border-top:1px solid var(--divider);}
+.lbl{min-width:70px;flex-shrink:0;}
+.lbl-main{font-size:15px;font-weight:600;color:var(--text);line-height:1.2;}
+.lbl-sub{font-size:10.5px;color:var(--muted);margin-top:1px;}
+.inp{
+  flex:1;height:42px;padding:0 12px;
+  font-size:17px;font-weight:400;color:var(--text);
+  background:var(--surf2);border:1.5px solid transparent;border-radius:var(--r);
+  -webkit-appearance:none;text-align:right;
+  font-variant-numeric:tabular-nums;font-family:inherit;
+  transition:border-color 0.18s,background 0.18s;
+}
+.inp:focus{border-color:var(--accent);background:var(--surf);outline:none;}
+.inp::placeholder{color:var(--faint);font-size:14px;}
+/* ── CLEAR BTN ── */
+.btn-clear{
+  display:block;width:calc(100% - 32px);margin:12px 16px 14px;
+  height:44px;background:var(--red);color:#fff;
+  border:none;border-radius:var(--r);font-size:15px;font-weight:600;
+  cursor:pointer;transition:opacity 0.15s;
+}
+.btn-clear:active{opacity:0.75;}
+/* ── NOTICE CHIP ── */
+.notice{
+  margin:0 16px 14px;padding:9px 12px;
+  background:var(--primary-bg);border-radius:var(--r-sm);
+  font-size:12.5px;color:var(--primary);
+  display:flex;align-items:center;gap:6px;
+}
+/* ── REF TABLE ── */
+.ref-table{width:100%;border-collapse:collapse;font-size:13px;}
+.ref-table th{
+  padding:9px 14px;font-size:11px;font-weight:700;
+  text-transform:uppercase;letter-spacing:0.06em;
+  color:var(--muted);text-align:left;
+  border-bottom:1px solid var(--divider);
+}
+.ref-table td{padding:9px 14px;border-bottom:1px solid var(--divider);font-variant-numeric:tabular-nums;}
+.ref-table tr:last-child td{border-bottom:none;}
+.ref-table tbody tr:active td{background:var(--surf2);}
+.badge{
+  display:inline-block;font-size:11px;font-weight:600;
+  padding:2px 8px;border-radius:var(--r-pill);
+  background:var(--primary-bg);color:var(--primary);
+}
+.badge.ok{background:rgba(52,199,89,0.15);color:var(--green);}
+.badge.warn{background:rgba(255,149,0,0.15);color:var(--orange);}
+.badge.bad{background:rgba(255,59,48,0.15);color:var(--red);}
+/* ── FORMULA BLOCK ── */
+.formula-block{padding:12px 16px 14px;}
+.formula-row{display:flex;align-items:baseline;gap:6px;padding:5px 0;border-bottom:1px solid var(--divider);}
+.formula-row:last-child{border-bottom:none;}
+.formula-lhs{font-size:13px;font-weight:600;color:var(--text);min-width:68px;}
+.formula-rhs{font-size:13px;color:var(--muted);font-family:'Menlo','SF Mono','Courier New',monospace;}
+.formula-note{font-size:11px;color:var(--faint);margin-left:auto;}
+/* ── BOTTOM TAB ── */
+.tab-bar{
+  position:fixed;bottom:0;left:0;right:0;
+  background:rgba(28,28,30,0.9);
+  border-top:1px solid var(--border);
+  padding:6px 0 env(safe-area-inset-bottom,6px);
+  display:flex;z-index:200;
+  backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
+}
+[data-theme="light"] .tab-bar{background:rgba(249,249,249,0.92);}
+.tab{
+  flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;
+  padding:5px 4px;border:none;background:none;cursor:pointer;
+  color:var(--faint);transition:color 0.15s;
+}
+.tab.active{color:var(--accent);}
+.tab-icon{font-size:24px;line-height:1;}
+.tab-lbl{font-size:10px;font-weight:500;letter-spacing:0.02em;}
+/* ── RL infinity display ── */
+.inf-display{
+  flex:1;height:42px;padding:0 12px;font-size:17px;
+  background:var(--surf2);border-radius:var(--r);
+  display:flex;align-items:center;justify-content:flex-end;
+  color:var(--muted);pointer-events:none;
+}
+</style>
+</head>
+<body>
+
+<!-- ══ HEADER ══ -->
+<header class="header">
+  <div class="header-inner">
+    <div class="header-logo-wrap">
+      <svg width="30" height="30" viewBox="0 0 30 30" fill="none" aria-label="RF Calc">
+        <rect width="30" height="30" rx="8" fill="var(--primary)"/>
+        <path d="M6 22V8h6c2.5 0 4 1.5 4 3.5S14.5 15 12 15H9v7H6z" fill="white"/>
+        <circle cx="22" cy="9" r="2.5" fill="white" opacity="0.9"/>
+        <circle cx="22" cy="15" r="2.5" fill="white" opacity="0.6"/>
+        <circle cx="22" cy="21" r="2.5" fill="white" opacity="0.35"/>
+        <line x1="22" y1="11.5" x2="22" y2="12.5" stroke="white" stroke-width="1.5"/>
+        <line x1="22" y1="17.5" x2="22" y2="18.5" stroke="white" stroke-width="1.5"/>
+      </svg>
+      <span class="header-title">RF <span>Converter</span></span>
+    </div>
+    <button class="icon-btn" id="themeBtn" aria-label="切換主題"></button>
+  </div>
+</header>
+
+<!-- ══ MAIN ══ -->
+<main class="main">
+
+  <!-- ▸ PAGE: POWER -->
+  <div class="page active" id="page-power">
+    <div class="card">
+      <div class="card-header"><span class="card-header-icon">⚡</span><span class="card-title">功率換算</span></div>
+      <div class="input-row">
+        <div class="lbl"><div class="lbl-main">dBm</div><div class="lbl-sub">dB‑milliwatt</div></div>
+        <input class="inp" type="number" id="p_dBm" inputmode="decimal" step="any" placeholder="— dBm" oninput="convP('dBm')">
+      </div>
+      <div class="input-row">
+        <div class="lbl"><div class="lbl-main">dBW</div><div class="lbl-sub">dB‑watt</div></div>
+        <input class="inp" type="number" id="p_dBW" inputmode="decimal" step="any" placeholder="— dBW" oninput="convP('dBW')">
+      </div>
+      <div class="input-row">
+        <div class="lbl"><div class="lbl-main">mW</div><div class="lbl-sub">毫瓦</div></div>
+        <input class="inp" type="number" id="p_mW" inputmode="decimal" step="any" placeholder="— mW" oninput="convP('mW')">
+      </div>
+      <div class="input-row">
+        <div class="lbl"><div class="lbl-main">W</div><div class="lbl-sub">瓦特</div></div>
+        <input class="inp" type="number" id="p_W" inputmode="decimal" step="any" placeholder="— W" oninput="convP('W')">
+      </div>
+      <div class="input-row">
+        <div class="lbl"><div class="lbl-main">μW</div><div class="lbl-sub">微瓦</div></div>
+        <input class="inp" type="number" id="p_uW" inputmode="decimal" step="any" placeholder="— μW" oninput="convP('uW')">
+      </div>
+      <button class="btn-clear" onclick="clearP()">清除全部</button>
+    </div>
+    <div class="card">
+      <div class="card-header"><span class="card-header-icon">📋</span><span class="card-title">常見功率對照</span></div>
+      <table class="ref-table">
+        <thead><tr><th>dBm</th><th>Power</th><th>情境說明</th></tr></thead>
+        <tbody>
+          <tr><td>+43 dBm</td><td>20 W</td><td>手機最大 TX</td></tr>
+          <tr><td>+30 dBm</td><td>1 W</td><td>1 W 基準</td></tr>
+          <tr><td>+20 dBm</td><td>100 mW</td><td>WiFi AP</td></tr>
+          <tr><td>+10 dBm</td><td>10 mW</td><td>BT / BLE TX</td></tr>
+          <tr><td>0 dBm</td><td>1 mW</td><td>0 dBm 基準</td></tr>
+          <tr><td>−30 dBm</td><td>1 μW</td><td>1 μW</td></tr>
+          <tr><td>−90 dBm</td><td>1 pW</td><td>弱訊號</td></tr>
+          <tr><td>−113 dBm</td><td>5×10⁻¹²mW</td><td>LTE 接收靈敏度</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ▸ PAGE: VOLTAGE -->
+  <div class="page" id="page-voltage">
+    <div class="notice">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      以下換算基準：系統阻抗 Z = 50 Ω（正弦波）
+    </div>
+    <div class="card">
+      <div class="card-header"><span class="card-header-icon">📡</span><span class="card-title">電壓 / 功率換算（50 Ω）</span></div>
+      <div class="input-row">
+        <div class="lbl"><div class="lbl-main">dBm</div><div class="lbl-sub">功率分貝</div></div>
+        <input class="inp" type="number" id="v_dBm" inputmode="decimal" step="any" placeholder="— dBm" oninput="convV('dBm')">
+      </div>
+      <div class="input-row">
+        <div class="lbl"><div class="lbl-main">dBμV</div><div class="lbl-sub">dB‑microvolt</div></div>
+        <input class="inp" type="number" id="v_dBuV" inputmode="decimal" step="any" placeholder="— dBμV" oninput="convV('dBuV')">
+      </div>
+      <div class="input-row">
+        <div class="lbl"><div class="lbl-main">dBmV</div><div class="lbl-sub">dB‑millivolt</div></div>
+        <input class="inp" type="number" id="v_dBmV" inputmode="decimal" step="any" placeholder="— dBmV" oninput="convV('dBmV')">
+      </div>
+      <div class="input-row">
+        <div class="lbl"><div class="lbl-main">V<sub style="font-size:10px">rms</sub></div><div class="lbl-sub">均方根電壓</div></div>
+        <input class="inp" type="number" id="v_Vrms" inputmode="decimal" step="any" placeholder="— V" oninput="convV('Vrms')">
+      </div>
+      <div class="input-row">
+        <div class="lbl"><div class="lbl-main">V<sub style="font-size:10px">pp</sub></div><div class="lbl-sub">峰對峰值</div></div>
+        <input class="inp" type="number" id="v_Vpp" inputmode="decimal" step="any" placeholder="— Vpp" oninput="convV('Vpp')">
+      </div>
+      <div class="input-row">
+        <div class="lbl"><div class="lbl-main">V<sub style="font-size:10px">peak</sub></div><div class="lbl-sub">峰值電壓</div></div>
+        <input class="inp" type="number" id="v_Vpk" inputmode="decimal" step="any" placeholder="— V" oninput="convV('Vpk')">
+      </div>
+      <button class="btn-clear" onclick="clearV()">清除全部</button>
+    </div>
+    <div class="card">
+      <div class="card-header"><span class="card-header-icon">📐</span><span class="card-title">換算公式（50 Ω）</span></div>
+      <div class="formula-block">
+        <div class="formula-row"><span class="formula-lhs">dBμV</span><span class="formula-rhs">= dBm + 106.99</span><span class="formula-note">≈ +107</span></div>
+        <div class="formula-row"><span class="formula-lhs">dBmV</span><span class="formula-rhs">= dBm + 46.99</span><span class="formula-note">≈ +47</span></div>
+        <div class="formula-row"><span class="formula-lhs">V<sub>rms</sub></span><span class="formula-rhs">= √( P[W] × 50 )</span></div>
+        <div class="formula-row"><span class="formula-lhs">V<sub>peak</sub></span><span class="formula-rhs">= √2 × V<sub>rms</sub></span></div>
+        <div class="formula-row"><span class="formula-lhs">V<sub>pp</sub></span><span class="formula-rhs">= 2√2 × V<sub>rms</sub></span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ▸ PAGE: VSWR -->
+  <div class="page" id="page-vswr">
+    <div class="card">
+      <div class="card-header"><span class="card-header-icon">🔁</span><span class="card-title">VSWR / Return Loss</span></div>
+      <div class="input-row">
+        <div class="lbl"><div class="lbl-main">VSWR</div><div class="lbl-sub">電壓駐波比</div></div>
+        <input class="inp" type="number" id="s_vswr" inputmode="decimal" step="any" placeholder="≥ 1.0" oninput="convS('vswr')">
+      </div>
+      <div class="input-row">
+        <div class="lbl"><div class="lbl-main">RL</div><div class="lbl-sub">Return Loss</div></div>
+        <input class="inp" type="number" id="s_rl" inputmode="decimal" step="any" placeholder="dB" oninput="convS('rl')">
+      </div>
+      <div class="input-row">
+        <div class="lbl"><div class="lbl-main">|Γ|</div><div class="lbl-sub">反射係數</div></div>
+        <input class="inp" type="number" id="s_gamma" inputmode="decimal" step="any" placeholder="0 ~ 1" oninput="convS('gamma')">
+      </div>
+      <div class="input-row">
+        <div class="lbl"><div class="lbl-main">ML</div><div class="lbl-sub">Mismatch Loss</div></div>
+        <input class="inp" type="number" id="s_ml" inputmode="decimal" step="any" placeholder="dB" oninput="convS('ml')">
+      </div>
+      <div class="input-row">
+        <div class="lbl"><div class="lbl-main">Refl%</div><div class="lbl-sub">反射功率 %</div></div>
+        <input class="inp" type="number" id="s_rpct" inputmode="decimal" step="any" placeholder="0 ~ 100" oninput="convS('rpct')">
+      </div>
+      <div class="input-row">
+        <div class="lbl"><div class="lbl-main">Trans%</div><div class="lbl-sub">傳輸功率 %</div></div>
+        <input class="inp" type="number" id="s_tpct" inputmode="decimal" step="any" placeholder="0 ~ 100" oninput="convS('tpct')">
+      </div>
+      <button class="btn-clear" onclick="clearS()">清除全部</button>
+    </div>
+    <div class="card">
+      <div class="card-header"><span class="card-header-icon">📋</span><span class="card-title">VSWR 快速對照表</span></div>
+      <table class="ref-table">
+        <thead><tr><th>VSWR</th><th>RL (dB)</th><th>|Γ|</th><th>ML</th><th>評級</th></tr></thead>
+        <tbody>
+          <tr><td>1.00</td><td>∞</td><td>0.000</td><td>0.00</td><td><span class="badge ok">完美</span></td></tr>
+          <tr><td>1.05</td><td>32.3</td><td>0.024</td><td>0.003</td><td><span class="badge ok">優秀</span></td></tr>
+          <tr><td>1.10</td><td>26.4</td><td>0.048</td><td>0.01</td><td><span class="badge ok">優良</span></td></tr>
+          <tr><td>1.25</td><td>19.1</td><td>0.111</td><td>0.06</td><td><span class="badge ok">良好</span></td></tr>
+          <tr><td>1.50</td><td>13.9</td><td>0.200</td><td>0.18</td><td><span class="badge">可接受</span></td></tr>
+          <tr><td>2.00</td><td>9.54</td><td>0.333</td><td>0.51</td><td><span class="badge warn">尚可</span></td></tr>
+          <tr><td>3.00</td><td>6.02</td><td>0.500</td><td>1.25</td><td><span class="badge warn">差</span></td></tr>
+          <tr><td>5.00</td><td>3.52</td><td>0.667</td><td>2.55</td><td><span class="badge bad">很差</span></td></tr>
+          <tr><td>∞</td><td>0</td><td>1.000</td><td>∞</td><td><span class="badge bad">短/斷路</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="card">
+      <div class="card-header"><span class="card-header-icon">📐</span><span class="card-title">VSWR 核心公式</span></div>
+      <div class="formula-block">
+        <div class="formula-row"><span class="formula-lhs">|Γ|</span><span class="formula-rhs">= (VSWR−1) / (VSWR+1)</span></div>
+        <div class="formula-row"><span class="formula-lhs">VSWR</span><span class="formula-rhs">= (1+|Γ|) / (1−|Γ|)</span></div>
+        <div class="formula-row"><span class="formula-lhs">RL</span><span class="formula-rhs">= −20·log₁₀(|Γ|)  [dB]</span></div>
+        <div class="formula-row"><span class="formula-lhs">ML</span><span class="formula-rhs">= −10·log₁₀(1−|Γ|²)  [dB]</span></div>
+        <div class="formula-row"><span class="formula-lhs">Refl%</span><span class="formula-rhs">= |Γ|² × 100</span></div>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<!-- ══ BOTTOM TAB BAR ══ -->
+<nav class="tab-bar" role="tablist" aria-label="功能分頁">
+  <button class="tab active" id="tab-power" onclick="switchTab('power')" role="tab" aria-selected="true">
+    <span class="tab-icon">⚡</span><span class="tab-lbl">功率</span>
+  </button>
+  <button class="tab" id="tab-voltage" onclick="switchTab('voltage')" role="tab" aria-selected="false">
+    <span class="tab-icon">📡</span><span class="tab-lbl">電壓</span>
+  </button>
+  <button class="tab" id="tab-vswr" onclick="switchTab('vswr')" role="tab" aria-selected="false">
+    <span class="tab-icon">🔁</span><span class="tab-lbl">VSWR</span>
+  </button>
+</nav>
+
+<script>
+/* ───────── THEME ───────── */
+(function(){
+  const btn = document.getElementById('themeBtn');
+  const html = document.documentElement;
+  let dark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  apply(dark);
+  btn.addEventListener('click',()=>{ dark=!dark; apply(dark); });
+  function apply(d){
+    html.setAttribute('data-theme', d?'dark':'light');
+    btn.innerHTML = d
+      ? `<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>`
+      : `<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>`;
+  }
+})();
+
+/* ───────── TAB ───────── */
+function switchTab(name){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>{ t.classList.remove('active'); t.setAttribute('aria-selected','false'); });
+  document.getElementById('page-'+name).classList.add('active');
+  document.getElementById('tab-'+name).classList.add('active');
+  document.getElementById('tab-'+name).setAttribute('aria-selected','true');
+  window.scrollTo({top:0,behavior:'instant'});
+}
+
+/* ───────── FORMAT ───────── */
+function fmt(n){
+  if(n===null||!isFinite(n)) return '';
+  const a=Math.abs(n);
+  if(a===0) return '0';
+  if(a>=1e7||( a>0 && a<1e-5)) return n.toExponential(4);
+  if(a>=1000) return +n.toFixed(3)+'';
+  if(a>=1)    return +n.toFixed(5)+'';
+  return +n.toFixed(7)+'';
+}
+function set(id,v){
+  const el=document.getElementById(id);
+  if(document.activeElement!==el) el.value=(v===''||v===null)?'':fmt(v);
+}
+
+/* ───────── POWER ───────── */
+function convP(src){
+  const val=parseFloat(document.getElementById('p_'+src).value);
+  if(isNaN(val)) return;
+  let dBm;
+  switch(src){
+    case 'dBm': dBm=val; break;
+    case 'dBW': dBm=val+30; break;
+    case 'mW':  if(val<=0)return; dBm=10*Math.log10(val); break;
+    case 'W':   if(val<=0)return; dBm=10*Math.log10(val*1e3); break;
+    case 'uW':  if(val<=0)return; dBm=10*Math.log10(val*1e-3); break;
+  }
+  const mW=Math.pow(10,dBm/10);
+  if(src!=='dBm') set('p_dBm',dBm);
+  if(src!=='dBW') set('p_dBW',dBm-30);
+  if(src!=='mW')  set('p_mW', mW);
+  if(src!=='W')   set('p_W',  mW/1e3);
+  if(src!=='uW')  set('p_uW', mW*1e3);
+}
+function clearP(){ ['dBm','dBW','mW','W','uW'].forEach(x=>document.getElementById('p_'+x).value=''); }
+
+/* ───────── VOLTAGE (50Ω) ───────── */
+// dBuV = dBm + 106.9897  (exact for 50Ω)
+// dBmV = dBm + 46.9897
+// Vrms = sqrt(P_W * 50) = sqrt(10^(dBm/10)*1e-3*50)
+// Vpeak = sqrt(2)*Vrms , Vpp = 2*sqrt(2)*Vrms
+const OFFSET_uV = 20*Math.log10(Math.sqrt(50e3));   // = 10*log10(50000) = 46.9897 + 60 = 106.9897
+const OFFSET_mV = 20*Math.log10(Math.sqrt(50e3))-60; // 46.9897
+
+function convV(src){
+  const val=parseFloat(document.getElementById('v_'+src).value);
+  if(isNaN(val)) return;
+  let dBm;
+  switch(src){
+    case 'dBm':  dBm=val; break;
+    case 'dBuV': dBm=val-OFFSET_uV; break;
+    case 'dBmV': dBm=val-OFFSET_mV-60; break;
+    case 'Vrms': if(val<=0)return; dBm=10*Math.log10(val*val/50*1e3); break;
+    case 'Vpp':  if(val<=0)return; { const vr=val/(2*Math.sqrt(2)); dBm=10*Math.log10(vr*vr/50*1e3); } break;
+    case 'Vpk':  if(val<=0)return; { const vr=val/Math.sqrt(2); dBm=10*Math.log10(vr*vr/50*1e3); } break;
+  }
+  const Vrms=Math.sqrt(Math.pow(10,dBm/10)*1e-3*50);
+  if(src!=='dBm')  set('v_dBm', dBm);
+  if(src!=='dBuV') set('v_dBuV',dBm+OFFSET_uV);
+  if(src!=='dBmV') set('v_dBmV',dBm+OFFSET_mV+60);
+  if(src!=='Vrms') set('v_Vrms',Vrms);
+  if(src!=='Vpp')  set('v_Vpp', 2*Math.sqrt(2)*Vrms);
+  if(src!=='Vpk')  set('v_Vpk', Math.sqrt(2)*Vrms);
+}
+function clearV(){ ['dBm','dBuV','dBmV','Vrms','Vpp','Vpk'].forEach(x=>document.getElementById('v_'+x).value=''); }
+
+/* ───────── VSWR / RL ───────── */
+function convS(src){
+  let val=parseFloat(document.getElementById('s_'+src).value);
+  if(isNaN(val)) return;
+  let g; // |Γ|
+  switch(src){
+    case 'vswr': if(val<1)return; g=(val===1)?0:(val-1)/(val+1); break;
+    case 'rl':   if(val<0)return; g=Math.pow(10,-val/20); break;
+    case 'gamma':if(val<0||val>=1)return; g=val; break;
+    case 'ml':   if(val<0)return; g=Math.sqrt(1-Math.pow(10,-val/10)); break;
+    case 'rpct': if(val<0||val>100)return; g=Math.sqrt(val/100); break;
+    case 'tpct': if(val<0||val>100)return; g=Math.sqrt(1-val/100); break;
+  }
+  const vswr = g>=1 ? Infinity : (1+g)/(1-g);
+  const rl   = g<=0 ? Infinity : -20*Math.log10(g);
+  const ml   = -10*Math.log10(1-g*g);
+  const rpct = g*g*100;
+  const tpct = 100-rpct;
+
+  if(src!=='vswr')  { const el=document.getElementById('s_vswr');  if(document.activeElement!==el) el.value=isFinite(vswr)?fmt(vswr):'∞'; }
+  if(src!=='rl')    { const el=document.getElementById('s_rl');    if(document.activeElement!==el) el.value=isFinite(rl)?fmt(rl):'∞'; }
+  if(src!=='gamma') set('s_gamma',g);
+  if(src!=='ml')    set('s_ml',   ml);
+  if(src!=='rpct')  set('s_rpct', rpct);
+  if(src!=='tpct')  set('s_tpct', tpct);
+}
+function clearS(){ ['vswr','rl','gamma','ml','rpct','tpct'].forEach(x=>document.getElementById('s_'+x).value=''); }
+</script>
+</body>
+</html>
